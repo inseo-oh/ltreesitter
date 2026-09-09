@@ -3,7 +3,7 @@
 
 // 260731 OIS - Modified to work with Emscripten, where no dynlib is available.
 
-#ifndef __EMSCRIPTEN__
+#ifndef LUNARBROWSER_PORT__
 #include "dynamiclib.h"
 
 bool dynlib_open(char const *name, Dynlib *handle, char const **out_error) {

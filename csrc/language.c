@@ -4,7 +4,7 @@
 #include "lua.h"
 #include "luautils.h"
 #include "tree_sitter/api.h"
-#ifndef __EMSCRIPTEN__
+#ifndef LUNARBROWSER_PORT__
 #include "dynamiclib.h"
 #endif
 #include "object.h"
@@ -37,7 +37,7 @@ void setup_dynlib_cache(lua_State *L) {
 #endif
 
 static int dynlib_gc(lua_State *L) {
-#ifndef __EMSCRIPTEN__
+#ifndef LUNARBROWSER_PORT__
 	Dynlib *lib = luaL_checkudata(L, 1, LTREESITTER_DYNLIB_METATABLE_NAME);
 #ifdef LOG_GC
 	printf("Dynlib %p is being garbage collected\n", (void const *)lib);
@@ -54,7 +54,7 @@ void dynlib_init_metatable(lua_State *L) {
 	create_metatable(L, LTREESITTER_DYNLIB_METATABLE_NAME, metamethods, (luaL_Reg[]){{NULL, NULL}});
 }
 
-#ifndef __EMSCRIPTEN__
+#ifndef LUNARBROWSER_PORT__
 // ( -- Dynlib )
 static void cache_dynlib(lua_State *L, char const *path_loaded_from, Dynlib dl) {
 	// TODO: should we even attempt to normalize the path?
@@ -76,7 +76,7 @@ static Dynlib *get_cached_dynlib(lua_State *L, char const *path) {
 }
 #endif
 
-#ifdef __EMSCRIPTEN__
+#ifdef LUNARBROWSER_PORT__
 
 #define STATIC_LANGUAGES_REGISTRY_KEY "ltreesitter.static_languages"
 
@@ -111,7 +111,7 @@ void ltreesitter_register_static_language(
    </pre>
 ]] */
 TSLanguage const *language_load_from(
-#ifndef __EMSCRIPTEN__
+#ifndef LUNARBROWSER_PORT__
 	Dynlib dl,
 #else
 	lua_State *L,
@@ -123,7 +123,7 @@ TSLanguage const *language_load_from(
 		memcpy(buf + TREE_SITTER_SYM_LEN, language_name, lang_name_len);
 		buf[TREE_SITTER_SYM_LEN + lang_name_len] = 0;
 	}
-#ifndef __EMSCRIPTEN__
+#ifndef LUNARBROWSER_PORT__
 	void *sym = dynlib_sym(&dl, buf);
 	if (!sym)
 		return NULL;
@@ -154,7 +154,7 @@ int language_load(lua_State *L) {
 		return 2;
 	}
 
-#ifndef __EMSCRIPTEN__
+#ifndef LUNARBROWSER_PORT__
 	Dynlib opened;
 	bool cached = false;
 	{
@@ -174,7 +174,7 @@ int language_load(lua_State *L) {
 #endif
 
 	TSLanguage const *lang = language_load_from(
-#ifndef __EMSCRIPTEN__
+#ifndef LUNARBROWSER_PORT__
 		opened,
 #else
 		L,
@@ -183,7 +183,7 @@ int language_load(lua_State *L) {
 	if (!lang) {
 		lua_pushnil(L);
 		lua_pushfstring(L, "Symbol not found in %s", dl_file);
-#ifndef __EMSCRIPTEN__
+#ifndef LUNARBROWSER_PORT__
 		if (!cached)
 			dynlib_close(&opened);
 #endif
@@ -195,7 +195,7 @@ int language_load(lua_State *L) {
 	setmetatable(L, LTREESITTER_LANGUAGE_METATABLE_NAME);
 	// dynlib | nothing, lang
 
-#ifndef __EMSCRIPTEN__
+#ifndef LUNARBROWSER_PORT__
 	if (!cached) {
 		cache_dynlib(L, dl_file, opened);
 		lua_insert(L, -2);
@@ -213,11 +213,11 @@ static bool try_load_from_path(
 	size_t lang_name_len,
 	char const *lang_name,
 	StringBuilder *err_buf) {
-#ifndef __EMSCRIPTEN__
+#ifndef LUNARBROWSER_PORT__
 	char const *dynlib_error = NULL;
 #endif
 	TSLanguage const *lang = NULL;
-#ifndef __EMSCRIPTEN__
+#ifndef LUNARBROWSER_PORT__
 	bool should_cache_dl = false;
 
 	{
@@ -240,26 +240,26 @@ static bool try_load_from_path(
 		}
 #endif
 		lang = language_load_from(
-#ifndef __EMSCRIPTEN__
+#ifndef LUNARBROWSER_PORT__
 			dl,
 #else
 		L,
 #endif
 			lang_name_len, lang_name);
 		if (!lang) {
-#ifndef __EMSCRIPTEN__
+#ifndef LUNARBROWSER_PORT__
 			dynlib_close(&dl);
 #endif
 			sb_push_fmt(err_buf, "\n\tFound %s, but unable to find symbol " TREE_SITTER_SYM "%s", dl_file, lang_name);
 			return false;
 		}
-#ifndef __EMSCRIPTEN__
+#ifndef LUNARBROWSER_PORT__
 	}
 #endif
 
 	uint32_t const version = ts_language_abi_version(lang);
 	if (version < TREE_SITTER_MIN_COMPATIBLE_LANGUAGE_VERSION) {
-#ifndef __EMSCRIPTEN__
+#ifndef LUNARBROWSER_PORT__
 		if (should_cache_dl)
 			dynlib_close(&dl);
 #endif
@@ -271,7 +271,7 @@ static bool try_load_from_path(
 			TREE_SITTER_MIN_COMPATIBLE_LANGUAGE_VERSION);
 		return false;
 	} else if (version > TREE_SITTER_LANGUAGE_VERSION) {
-#ifndef __EMSCRIPTEN__
+#ifndef LUNARBROWSER_PORT__
 		if (should_cache_dl)
 			dynlib_close(&dl);
 #endif
@@ -292,7 +292,7 @@ static bool try_load_from_path(
 
 	// dynlib | nothing, lang
 
-#ifndef __EMSCRIPTEN__
+#ifndef LUNARBROWSER_PORT__
 	if (should_cache_dl) { // (nothing), lang
 		cache_dynlib(L, dl_file, dl);
 		lua_insert(L, -2);

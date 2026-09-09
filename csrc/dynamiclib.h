@@ -3,7 +3,7 @@
 
 // 260731 OIS - Modified to work with Emscripten, where no dynlib is available.
 
-#ifndef __EMSCRIPTEN__
+#ifndef LUNARBROWSER_PORT__
 
 #include <stdbool.h>
 

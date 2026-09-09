@@ -3,7 +3,7 @@
 
 // 260731 OIS - Modified to work with Emscripten, where no dynlib is available.
 
-#ifndef __EMSCRIPTEN__
+#ifndef LUNARBROWSER_PORT__
 #include "dynamiclib.h"
 #endif
 #include "types.h"
@@ -15,7 +15,7 @@ void language_init_metatable(lua_State *);
 def_check_assert(TSLanguage const *, language, LTREESITTER_LANGUAGE_METATABLE_NAME)
 
 	TSLanguage const *language_load_from(
-#ifndef __EMSCRIPTEN__
+#ifndef LUNARBROWSER_PORT__
 		Dynlib dl,
 #else
 		lua_State *L,
@@ -31,7 +31,7 @@ int language_require(lua_State *L);
 void setup_dynlib_cache(lua_State *L);
 void dynlib_init_metatable(lua_State *L);
 
-#ifdef __EMSCRIPTEN__
+#ifdef LUNARBROWSER_PORT__
 
 // OIS: New function to register tree-sitter languages.
 void ltreesitter_register_static_language(

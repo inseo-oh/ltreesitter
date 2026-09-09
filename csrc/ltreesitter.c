@@ -25,7 +25,7 @@ static const luaL_Reg lib_funcs[] = {
 
 #ifdef _WIN32
 __declspec(dllexport)
-#else
+#elif !defined(LUNARBROWSER_AMIGAOS__)
 __attribute__((visibility("default")))
 #endif
 int luaopen_ltreesitter(lua_State *L);
